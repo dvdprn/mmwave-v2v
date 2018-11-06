@@ -932,4 +932,222 @@ RangePropagationLossModel::DoAssignStreams (int64_t stream)
 
 // ------------------------------------------------------------------------- //
 
+NS_OBJECT_ENSURE_REGISTERED (MmWaveV2VPropagationLossModel);
+
+
+TypeId
+MmWaveV2VPropagationLossModel::GetTypeId (void)
+{
+  static TypeId tid = TypeId ("ns3::MmWaveV2VPropagationLossModel")
+    .SetParent<PropagationLossModel> ()
+    .SetGroupName ("Propagation")
+    .AddConstructor<MmWaveV2VPropagationLossModel> ()
+    .AddAttribute ("Frequency",
+                   "The propagation frequency in GHz",
+                   DoubleValue (63),
+                   MakeDoubleAccessor (&MmWaveV2VPropagationLossModel::m_frequency),
+                   MakeDoubleChecker<double> ())
+    .AddAttribute ("Scenario",
+                   "Scenario of the simulation",
+                   StringValue ("Urban"), // Urban, Highway
+                   MakeStringAccessor (&MmWaveV2VPropagationLossModel::m_scenario),
+                   MakeStringChecker ())
+    .AddAttribute ("Traffic",
+                   "Density of vehicles",
+                   StringValue ("Medium"), // Low, Medium, High
+                   MakeStringAccessor (&MmWaveV2VPropagationLossModel::m_traffic),
+                   MakeStringChecker ());
+  return tid;
+}
+
+MmWaveV2VPropagationLossModel::MmWaveV2VPropagationLossModel ()
+{
+}
+
+MmWaveV2VPropagationLossModel::~MmWaveV2VPropagationLossModel ()
+{
+}
+
+double MmWaveV2VPropagationLossModel::getUrbanLOSPathLoss(double dist) const{
+  double sigma = pow(10, 3.0/10);
+  Ptr<NormalRandomVariable> sigma_shadowing = CreateObject<NormalRandomVariable>();
+
+  double shadowing = 10*log10(exp(sigma * sigma_shadowing->GetValue()));
+  double omegaOxyAbs = 0;
+
+  if(m_frequency > 52 and m_frequency < 68){
+    omegaOxyAbs = m_omega_oxygen.at(int(m_frequency));
+  }
+  double oxyAbs = dist * omegaOxyAbs/1000;
+  return 38.77 + 16.7 * log10(dist) + 18.2 * log10(m_frequency) + shadowing + oxyAbs;
+}
+
+double MmWaveV2VPropagationLossModel::getHighwayLOSPathLoss(double dist) const{
+  double sigma = pow(10, 3.0/10);
+  Ptr<NormalRandomVariable> sigma_shadowing = CreateObject<NormalRandomVariable>();
+
+  double shadowing = 10*log10(exp(sigma * sigma_shadowing->GetValue()));
+  double omegaOxyAbs = 0;
+
+  if(m_frequency > 52 and m_frequency < 68){
+    omegaOxyAbs = m_omega_oxygen.at(int(m_frequency));
+  }
+  double oxyAbs = dist * omegaOxyAbs/1000;
+  return 32.4 + 20 * log10(dist) + 20 * log10(m_frequency) + shadowing + oxyAbs;
+}
+
+double MmWaveV2VPropagationLossModel::getNLOSPathLoss(double dist) const{
+  double sigma = pow(10, 4/10);
+  Ptr<NormalRandomVariable> sigma_shadowing = CreateObject<NormalRandomVariable>();
+
+  double shadowing = 10*log10(exp(sigma * sigma_shadowing->GetValue()));
+  double omegaOxyAbs = 0;
+
+  if(m_frequency > 52 and m_frequency < 68){
+    omegaOxyAbs = m_omega_oxygen.at(int(m_frequency));
+  }
+  double oxyAbs = dist * omegaOxyAbs/1000;
+  return 36.8 + 30 * log10(dist) + 18.9 * log10(m_frequency) + shadowing + oxyAbs;
+}
+
+double MmWaveV2VPropagationLossModel::getUrbanNLOSvPathLoss(double dist) const{
+
+  // Assumption: RX and TX antennas are in NLOS each other due to some vehicle in the middle
+  double sigma = pow(10, 4.5/10);
+  double mean = pow(10, 12.5/10);
+  Ptr<NormalRandomVariable> sigma_shadowing = CreateObject<NormalRandomVariable>();
+
+  double blockage_attenuation = 10*log10(exp(mean + sigma * sigma_shadowing->GetValue()));
+  return getUrbanLOSPathLoss(dist) + std::max(0.0, blockage_attenuation);
+}
+
+double MmWaveV2VPropagationLossModel::getHighwayNLOSvPathLoss(double dist) const{
+
+  // Assumption: RX and TX antennas are in NLOS each other due to some vehicle in the middle
+  double sigma = pow(10, 4.5/10);
+  double mean = pow(10, 12.5/10);
+  Ptr<NormalRandomVariable> sigma_shadowing = CreateObject<NormalRandomVariable>();
+
+  double blockage_attenuation = 10*log10(exp(mean + sigma * sigma_shadowing->GetValue()));
+  return getHighwayLOSPathLoss(dist) + std::max(0.0, blockage_attenuation);
+}
+
+
+double
+MmWaveV2VPropagationLossModel::GetLoss (Ptr<MobilityModel> a, Ptr<MobilityModel> b) const
+{
+  double loss = 0.0;
+  double dist = a->GetDistanceFrom (b); // [m]
+  // double z = m_sigma_shadowing->GetValue();
+  double Plos;
+
+  Ptr<UniformRandomVariable> uniform = CreateObject<UniformRandomVariable>();
+  double u = uniform->GetValue();
+
+  if(m_scenario == "Urban"){
+    double f_d;
+    if(m_traffic == "Low"){
+        f_d = 0.8548 * exp(-0.0064 * dist);
+    }
+    else if(m_traffic == "Medium"){
+        f_d = 0.8372 * exp(-0.0114 * dist);
+    }
+    else if(m_traffic == "High"){
+        f_d = 0.8962 * exp(-0.017 * dist);
+    }
+    
+    Plos = std::min(1.0, std::max(0.0, f_d));
+
+    if(u < Plos){ // LOS
+      // NS_LOG_UNCOND("LOS");
+      loss = getUrbanLOSPathLoss(dist);
+    }
+    else{// Check for NLOSv
+      if(m_traffic == "Low"){
+        f_d = 1/(0.0396 * dist) * exp(-pow((log(dist) - 5.2718),2)/3.4827);
+      }
+      else if(m_traffic == "Medium"){
+        f_d = 1/(0.0312 * dist) * exp(-pow((log(dist) - 5.0063),2)/2.4544);
+      }
+      else if(m_traffic == "High"){
+        f_d = 1/(0.0242 * dist) * exp(-pow((log(dist) - 5.0115),2)/2.2092);
+      }
+
+      double Pnlosv = std::min(1.0, std::max(0.0, f_d));
+      if(u < Plos + Pnlosv){ // NLOSv
+        // NS_LOG_UNCOND("NLOSv");
+        loss = getUrbanNLOSvPathLoss(dist);
+      }
+      else{// NLOS
+        // NS_LOG_UNCOND("NLOS");
+        loss = getNLOSPathLoss(dist);
+      }
+    }
+  }
+  else if(m_scenario == "Highway"){
+    double a, b, c;
+    c = 1;
+    if(m_traffic == "Low"){
+      a = 1.5e-6;
+      b = -0.0015;
+    }
+    else if(m_traffic == "Medium"){
+      a = 2.7e-6;
+      b = -0.0025;
+    }
+    else if(m_traffic == "High"){
+      a = 3.2e-6;
+      b = -0.003;
+    }
+    
+    Plos = std::min(1.0, std::max(0.0, a * pow(dist, 2) + b * dist + c));
+
+    if(u < Plos){ // LOS
+      loss = getHighwayLOSPathLoss(dist);
+    }
+    else{// Check for NLOS
+      if(m_traffic == "Low"){
+        a = -2.9e-7;
+        b = 0.00059;
+        c = 0.0017;
+      }
+      else if(m_traffic == "Medium"){
+        a = -3.7e-7;
+        b = 0.00061;
+        c = 0.015;
+      }
+      else if(m_traffic == "High"){
+        a = -4.1e-7;
+        b = 0.00067;
+        c = 0;
+      }
+
+      double Pnlos = std::min(1.0, std::max(0.0, a * pow(dist, 2) + b * dist + c));
+      if(u < Plos + Pnlos){ // NLOS
+        loss = getNLOSPathLoss(dist);
+      }
+      else{// NLOSv
+        loss = getHighwayNLOSvPathLoss(dist);
+      }
+    }
+  }
+
+  // NS_LOG_UNCOND("<<<<<<<<<<<<<<<<<<<<<<<" + std::to_string(loss));
+  return loss;
+}
+
+double 
+MmWaveV2VPropagationLossModel::DoCalcRxPower (double txPowerDbm,
+            Ptr<MobilityModel> a,
+            Ptr<MobilityModel> b) const
+{
+  return (txPowerDbm - GetLoss (a, b));
+}
+
+int64_t
+MmWaveV2VPropagationLossModel::DoAssignStreams (int64_t stream)
+{
+  return 0;
+}
+
 } // namespace ns3

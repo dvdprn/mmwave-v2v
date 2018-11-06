@@ -40,7 +40,10 @@ YansWifiChannelHelper::Default (void)
 {
   YansWifiChannelHelper helper;
   helper.SetPropagationDelay ("ns3::ConstantSpeedPropagationDelayModel");
-  helper.AddPropagationLoss ("ns3::LogDistancePropagationLossModel");
+  // helper.AddPropagationLoss ("ns3::LogDistancePropagationLossModel");
+  helper.AddPropagationLoss ("ns3::MmWaveV2VPropagationLossModel");
+  helper.AddPropagationLoss("ns3::NakagamiPropagationLossModel"); // Fading
+  helper.AddPropagationLoss("ns3::RandomPropagationLossModel"); // Shadowing
   return helper;
 }
 

@@ -856,6 +856,74 @@ private:
   double m_range; //!< Maximum Transmission Range (meters)
 };
 
+/**
+ * \ingroup propagation
+ *
+ * \brief this class implements the MmWave V2V propagation loss model
+ * 
+ * this class implements the MmWave V2V propagation loss model
+ */
+class MmWaveV2VPropagationLossModel : public PropagationLossModel
+{
+
+public:
+
+  /**
+   * \brief Get the type ID.
+   * \return the object TypeId
+   */
+  static TypeId GetTypeId (void);
+
+  MmWaveV2VPropagationLossModel ();
+  virtual ~MmWaveV2VPropagationLossModel ();
+
+private:
+  /**
+   * \brief Copy constructor
+   *
+   * Defined and unimplemented to avoid misuse
+   */
+  MmWaveV2VPropagationLossModel (const MmWaveV2VPropagationLossModel &);
+  /**
+   * \brief Copy constructor
+   *
+   * Defined and unimplemented to avoid misuse
+   * \returns
+   */
+  MmWaveV2VPropagationLossModel & operator = (const MmWaveV2VPropagationLossModel &);
+
+  /*
+  * \brief Compute the path loss in LOS in urban environment
+  * d = distance [m]
+  * fc = carrier frequency [GHz]
+  */
+  double getUrbanLOSPathLoss(double dist) const;
+  double getHighwayLOSPathLoss(double dist) const;
+  double getNLOSPathLoss(double dist) const;
+  double getUrbanNLOSvPathLoss(double dist) const;
+  double getHighwayNLOSvPathLoss(double dist) const;
+    /** 
+   * \param a the first mobility model
+   * \param b the second mobility model
+   * 
+   * \return the loss in dBm for the propagation between
+   * the two given mobility models
+   */
+  double GetLoss (Ptr<MobilityModel> a, Ptr<MobilityModel> b) const;
+
+  virtual double DoCalcRxPower (double txPowerDbm,
+                                Ptr<MobilityModel> a,
+                                Ptr<MobilityModel> b) const;
+  virtual int64_t DoAssignStreams (int64_t stream);
+  
+  std::string m_scenario;  //!< Scenario of the simulation
+  std::string m_traffic;  //!< Density of vehicles
+  double m_frequency; //!< frequency in Hz
+  Ptr<NormalRandomVariable> m_sigma_shadowing;
+
+  const std::map<int, double> m_omega_oxygen = {{53, 1}, {54, 2.2}, {55, 4}, {56, 6.6}, {57, 9.7}, {58, 12.6}, {59, 14.6}, {60, 15}, {61, 14.6}, {62, 14.3}, {63, 10.5}, {64, 6.8}, {65, 3.9}, {66, 1.9}, {67, 1}};
+};
+
 } // namespace ns3
 
 #endif /* PROPAGATION_LOSS_MODEL_H */

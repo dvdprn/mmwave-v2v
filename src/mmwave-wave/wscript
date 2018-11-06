@@ -1,0 +1,61 @@
+# -*- Mode: python; py-indent-offset: 4; indent-tabs-mode: nil; coding: utf-8; -*-
+
+# def options(opt):
+#     pass
+
+# def configure(conf):
+#     conf.check_nonfatal(header_name='stdint.h', define_name='HAVE_STDINT_H')
+
+def build(bld):
+    module = bld.create_ns3_module('mmwave-wave', ['core','wifi', 'propagation', 'internet', 'wave'])
+    module.source = [
+        'model/mmwave-wave-mac-low.cc',
+        'model/mmwave-wave-ocb-wifi-mac.cc',
+        'model/mmwave-wave-vendor-specific-action.cc',
+        'model/mmwave-wave-channel-coordinator.cc',
+        'model/mmwave-wave-channel-scheduler.cc',
+        'model/mmwave-wave-default-channel-scheduler.cc',
+        'model/mmwave-wave-channel-manager.cc',
+        'model/mmwave-wave-vsa-manager.cc',
+        'model/mmwave-wave-bsm-application.cc',
+        'model/mmwave-wave-higher-tx-tag.cc',
+        'model/mmwave-wave-net-device.cc',
+        'helper/mmwave-wave-bsm-stats.cc',
+        'helper/mmwave-wave-mac-helper.cc',
+        'helper/mmwave-wave-helper.cc',
+        'helper/mmwave-wifi-80211p-helper.cc',
+        'helper/mmwave-wave-bsm-helper.cc'
+        ]
+
+    module_test = bld.create_ns3_module_test_library('mmwave-wave')
+    module_test.source = [
+        'test/mac-extension-test-suite.cc',
+        'test/ocb-test-suite.cc',
+        ]
+
+    headers = bld(features='ns3header')
+    headers.module = 'mmwave-wave'
+    headers.source = [
+        'model/mmwave-wave-mac-low.h',
+        'model/mmwave-wave-ocb-wifi-mac.h',
+        'model/mmwave-wave-vendor-specific-action.h',
+        'model/mmwave-wave-channel-coordinator.h',
+        'model/mmwave-wave-channel-manager.h',
+        'model/mmwave-wave-channel-scheduler.h',
+        'model/mmwave-wave-default-channel-scheduler.h',
+        'model/mmwave-wave-vsa-manager.h',
+        'model/mmwave-wave-higher-tx-tag.h',
+        'model/mmwave-wave-net-device.h',
+        'model/mmwave-wave-bsm-application.h',
+        'helper/mmwave-wave-bsm-stats.h',
+        'helper/mmwave-wave-mac-helper.h',
+        'helper/mmwave-wave-helper.h',
+        'helper/mmwave-wifi-80211p-helper.h',
+        'helper/mmwave-wave-bsm-helper.h',
+        ]
+
+    if bld.env.ENABLE_EXAMPLES:
+        bld.recurse('examples')
+
+    bld.ns3_python_bindings()
+
