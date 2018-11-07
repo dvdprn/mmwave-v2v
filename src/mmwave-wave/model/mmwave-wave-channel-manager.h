@@ -28,31 +28,31 @@ namespace ns3 {
 /**
  * \ingroup wave
  *
- * WAVE channels
- * channel number             |   172   |   174   |   176   |   178   |   180   |   182   |   184   |
- * channel bandwidth          10MHz  10MHz  10MHz  10MHz 10MHz  10MHz  10MHz
+ * MMWAVE-WAVE channels
+ * channel number             |   202   |   204   |   206   |   208   |   210   |   212   |   214   |
+ * channel bandwidth          100MHz  100MHz  100MHz  100MHz 100MHz  100MHz  100MHz
  * channel name                      SCH1     SCH2     SCH3     CCH       SCH4     SCH5     SCH6
- * another name                     CH172   CH174   CH176   CH178   CH180  CH182   CH184
+ * another name                     CH202   CH204   CH206   CH208   CH210  CH212   CH214
  *
  * not support
  * channel 175 : combine channel 174 and 176
  * channel 181 : combine channel 180 and 182
  */
-#define CH172 172
-#define CH174 174
-#define CH176 176
-#define CH178 178
-#define CH180 180
-#define CH182 182
-#define CH184 184
+#define CH202 202
+#define CH204 204
+#define CH206 206
+#define CH208 208
+#define CH210 210
+#define CH212 212
+#define CH214 214
 
-#define SCH1 172
-#define SCH2 174
-#define SCH3 176
-#define CCH  178
-#define SCH4 180
-#define SCH5 182
-#define SCH6 184
+#define SCH1 202
+#define SCH2 204
+#define SCH3 206
+#define CCH  208
+#define SCH4 210
+#define SCH5 212
+#define SCH6 214
 
 /**
  * \ingroup wave

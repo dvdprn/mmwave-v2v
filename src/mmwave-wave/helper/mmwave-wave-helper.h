@@ -26,6 +26,7 @@
 #include "ns3/net-device-container.h"
 #include "ns3/trace-helper.h"
 #include "ns3/yans-wifi-helper.h"
+#include <ns3/antenna-array-model.h>
 
 namespace ns3 {
 
@@ -133,6 +134,17 @@ public:
    * \param phys the number of PHY entity which will be created for multiple channel operation.
    */
   void CreatePhys (uint32_t phys);
+
+  /**
+   * \param Nrx the number of antennas in the receiver.
+   * \param Ntx the number of antennas in the transmitter.
+   */
+  void SetAntenna (uint16_t NAntennas);
+
+  /**
+   * \param freq Central frequency of the communication
+   */
+  void SetFrequency (uint16_t freq);
 
   /**
    * \param type the type of ns3::WifiRemoteStationManager to create.
@@ -248,6 +260,12 @@ protected:
   ObjectFactory m_channelScheduler; ///< channel scheduler
   std::vector<uint32_t> m_macsForChannelNumber; ///< MACs for channel number
   uint32_t m_physNumber; ///< Phy number
+
+private:
+  uint16_t m_noAntennas;
+  uint16_t m_noEnbPanels;
+  uint16_t m_noUePanels;
+  uint16_t m_freq;
 };
 }
 #endif /* WAVE_HELPER_H */

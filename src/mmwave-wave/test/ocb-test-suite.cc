@@ -293,9 +293,9 @@ OcbWifiMacTestCase::ConfigureOcbMode (Ptr<Node> static_node, Ptr<Node> mobile_no
   YansWifiPhyHelper wifiPhy = YansWifiPhyHelper::Default ();
   wifiPhy.SetChannel (wifiChannel.Create ());
 
-  NqosWaveMacHelper wifi80211pMac = NqosWaveMacHelper::Default ();
+  NqosMmWaveWaveMacHelper wifi80211pMac = NqosMmWaveWaveMacHelper::Default ();
 
-  Wifi80211pHelper wifi80211p = Wifi80211pHelper::Default ();
+  MmWaveWifi80211pHelper wifi80211p = MmWaveWifi80211pHelper::Default ();
   wifi80211p.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
                                       "DataMode", StringValue ("OfdmRate6MbpsBW10MHz"),
                                       "ControlMode",StringValue ("OfdmRate6MbpsBW10MHz"));
@@ -453,7 +453,7 @@ public:
 };
 
 OcbTestSuite::OcbTestSuite ()
-  : TestSuite ("wifi-80211p-ocb", UNIT)
+  : TestSuite ("mmwave-wifi-80211p-ocb", UNIT)
 {
   // TestDuration for TestCase can be QUICK, EXTENSIVE or TAKES_FOREVER
   AddTestCase (new OcbWifiMacTestCase, TestCase::QUICK);

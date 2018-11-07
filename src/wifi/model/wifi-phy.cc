@@ -136,6 +136,14 @@ WifiPhy::ChannelToFrequencyWidthMap WifiPhy::m_channelToFrequencyWidth =
   { std::make_pair (138, WIFI_PHY_STANDARD_UNSPECIFIED), std::make_pair (5690, 80) },
   { std::make_pair (155, WIFI_PHY_STANDARD_UNSPECIFIED), std::make_pair (5775, 80) },
   { std::make_pair (171, WIFI_PHY_STANDARD_UNSPECIFIED), std::make_pair (5855, 80) },
+  // 100 MHz channels 60 GHz for mmWave-WAVE
+  { std::make_pair (202, WIFI_PHY_MMWAVE_80211_60GHZ), std::make_pair (58600, 100) },
+  { std::make_pair (204, WIFI_PHY_MMWAVE_80211_60GHZ), std::make_pair (58700, 100) },
+  { std::make_pair (206, WIFI_PHY_MMWAVE_80211_60GHZ), std::make_pair (58800, 100) },
+  { std::make_pair (208, WIFI_PHY_MMWAVE_80211_60GHZ), std::make_pair (58900, 100) },
+  { std::make_pair (210, WIFI_PHY_MMWAVE_80211_60GHZ), std::make_pair (59000, 100) },
+  { std::make_pair (212, WIFI_PHY_MMWAVE_80211_60GHZ), std::make_pair (59100, 100) },
+  { std::make_pair (214, WIFI_PHY_MMWAVE_80211_60GHZ), std::make_pair (59200, 100) },
   // 160 MHz channels
   { std::make_pair (50, WIFI_PHY_STANDARD_UNSPECIFIED), std::make_pair (5250, 160) },
   { std::make_pair (114, WIFI_PHY_STANDARD_UNSPECIFIED), std::make_pair (5570, 160) },
@@ -164,7 +172,7 @@ WifiPhy::GetTypeId (void)
                                          &WifiPhy::SetFrequency),
                    MakeUintegerChecker<uint16_t> ())
     .AddAttribute ("ChannelWidth",
-                   "Whether 5MHz, 10MHz, 20MHz, 22MHz, 40MHz, 80 MHz or 160 MHz.",
+                   "Whether 5MHz, 10MHz, 20MHz, 22MHz, 40MHz, 80 MHz, 100MHz or 160 MHz.",
                    UintegerValue (20),
                    MakeUintegerAccessor (&WifiPhy::GetChannelWidth,
                                          &WifiPhy::SetChannelWidth),
@@ -798,6 +806,12 @@ WifiPhy::ConfigureDefaultsForStandard (WifiPhyStandard standard)
       // Channel number should be aligned by SetFrequency () to 42
       NS_ASSERT (GetChannelNumber () == 42);
       break;
+    case WIFI_PHY_MMWAVE_80211_60GHZ:
+      SetChannelWidth (100);
+      SetFrequency (58600);
+      // Channel number should be aligned by SetFrequency () to 202
+      NS_ASSERT (GetChannelNumber () == 202);
+      break;
     case WIFI_PHY_STANDARD_UNSPECIFIED:
     default:
       NS_LOG_WARN ("Configuring unspecified standard; performing no action");
@@ -875,6 +889,14 @@ WifiPhy::Configure80211_5Mhz (void)
   m_deviceRateSet.push_back (WifiPhy::GetOfdmRate9MbpsBW5MHz ());
   m_deviceRateSet.push_back (WifiPhy::GetOfdmRate12MbpsBW5MHz ());
   m_deviceRateSet.push_back (WifiPhy::GetOfdmRate13_5MbpsBW5MHz ());
+}
+
+void
+WifiPhy::ConfigureMmWave80211_100Mhz (void)
+{
+  NS_LOG_FUNCTION (this);
+
+  m_deviceRateSet.push_back (WifiPhy::GetOfdmRate54Mbps ());
 }
 
 void
@@ -1169,6 +1191,9 @@ WifiPhy::ConfigureStandard (WifiPhyStandard standard)
     case WIFI_PHY_STANDARD_80211ax_5GHZ:
       Configure80211ax ();
       break;
+    case WIFI_PHY_MMWAVE_80211_60GHZ:
+      ConfigureMmWave80211_100Mhz ();
+      break;
     case WIFI_PHY_STANDARD_UNSPECIFIED:
     default:
       NS_ASSERT (false);
@@ -1249,7 +1274,7 @@ void
 WifiPhy::SetChannelWidth (uint16_t channelwidth)
 {
   NS_LOG_FUNCTION (this << channelwidth);
-  NS_ASSERT_MSG (channelwidth == 5 || channelwidth == 10 || channelwidth == 20 || channelwidth == 22 || channelwidth == 40 || channelwidth == 80 || channelwidth == 160, "wrong channel width value");
+  NS_ASSERT_MSG (channelwidth == 5 || channelwidth == 10 || channelwidth == 20 || channelwidth == 22 || channelwidth == 40 || channelwidth == 80 || channelwidth == 100 || channelwidth == 160, "wrong channel width value");
   bool changed = (m_channelWidth == channelwidth);
   m_channelWidth = channelwidth;
   AddSupportedChannelWidth (channelwidth);
@@ -1781,6 +1806,7 @@ WifiPhy::GetPlcpHeaderMode (WifiTxVector txVector)
         case 20:
         case 40:
         case 80:
+        case 100:
         case 160:
         default:
           //(Section 18.3.2 "PLCP frame format"; IEEE Std 802.11-2012)
@@ -2831,7 +2857,7 @@ WifiPhy::GetOfdmRate54Mbps ()
   static WifiMode mode =
     WifiModeFactory::CreateWifiMode ("OfdmRate54Mbps",
                                      WIFI_MOD_CLASS_OFDM,
-                                     false,
+                                     true,
                                      WIFI_CODE_RATE_3_4,
                                      64);
   return mode;

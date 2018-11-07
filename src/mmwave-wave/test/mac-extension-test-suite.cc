@@ -23,9 +23,9 @@
 #include "ns3/mobility-model.h"
 #include "ns3/yans-wifi-helper.h"
 #include "ns3/mobility-helper.h"
-#include "ns3/wave-net-device.h"
-#include "ns3/wave-mac-helper.h"
-#include "ns3/wave-helper.h"
+#include "ns3/mmwave-wave-net-device.h"
+#include "ns3/mmwave-wave-mac-helper.h"
+#include "ns3/mmwave-wave-helper.h"
 
 using namespace ns3;
 
@@ -78,7 +78,7 @@ private:
    */
   void TestIntervalAfter (bool cchi, bool schi, bool guardi);
   virtual void DoRun (void);
-  Ptr<ChannelCoordinator> m_coordinator; ///< coordinator
+  Ptr<MmWaveWaveChannelCoordinator> m_coordinator; ///< coordinator
 
 };
 
@@ -247,7 +247,7 @@ ChannelCoordinationTestCase::DoRun ()
   Simulator::Run ();
   Simulator::Destroy ();
 
-  m_coordinator = CreateObject<ChannelCoordinator> ();
+  m_coordinator = CreateObject<MmWaveWaveChannelCoordinator> ();
   // third test channel coordination events
   Ptr<CoordinationTestListener> ptr = Create<CoordinationTestListener> (this);
   m_coordinator->RegisterListener (ptr);
@@ -299,8 +299,8 @@ TestCaseHelper::CreatWaveDevice (uint32_t nodesNumber)
   YansWifiChannelHelper wifiChannel = YansWifiChannelHelper::Default ();
   YansWavePhyHelper wifiPhy =  YansWavePhyHelper::Default ();
   wifiPhy.SetChannel (wifiChannel.Create ());
-  QosWaveMacHelper waveMac = QosWaveMacHelper::Default ();
-  WaveHelper waveHelper = WaveHelper::Default ();
+  QosMmWaveWaveMacHelper waveMac = QosMmWaveWaveMacHelper::Default ();
+  MmWaveWaveHelper waveHelper = MmWaveWaveHelper::Default ();
   NetDeviceContainer devices = waveHelper.Install (wifiPhy, waveMac, nodes);
   return devices;
 }
@@ -760,12 +760,12 @@ ChannelAccessTestCase::DoRun ()
   // test ContinuousAccess again in the receiver side
   {
     m_devices = TestCaseHelper::CreatWaveDevice (8);
-    m_sender = DynamicCast<WaveNetDevice> (m_devices.Get (0));
+    m_sender = DynamicCast<MmWaveWaveNetDevice> (m_devices.Get (0));
     m_received = 0;
 
     for (uint32_t i = 1; i != 8; ++i)
       {
-        Ptr<WaveNetDevice> device = DynamicCast<WaveNetDevice> (m_devices.Get (i));
+        Ptr<MmWaveWaveNetDevice> device = DynamicCast<MmWaveWaveNetDevice> (m_devices.Get (i));
         device->SetReceiveCallback (MakeCallback (&ChannelAccessTestCase::Receive, this));
 
         // at 0s, receivers are assigned ContinuousAccess from CCH, SCH1 to SCH6
@@ -807,7 +807,7 @@ ChannelAccessTestCase::DoRun ()
   // test ExtendedAccess in the sender side
   {
     m_devices = TestCaseHelper::CreatWaveDevice (1);
-    m_sender = DynamicCast<WaveNetDevice> (m_devices.Get (0));
+    m_sender = DynamicCast<MmWaveWaveNetDevice> (m_devices.Get (0));
 
     // there is no need for assigning CCH extended access.
     SchInfo info = SchInfo (CCH, false, 10);
@@ -857,19 +857,19 @@ ChannelAccessTestCase::DoRun ()
   // test ExtendedAccess again in the receiver side
   {
     m_devices = TestCaseHelper::CreatWaveDevice (8);
-    m_sender = DynamicCast<WaveNetDevice> (m_devices.Get (0));
+    m_sender = DynamicCast<MmWaveWaveNetDevice> (m_devices.Get (0));
     m_received = 0;
 
     for (uint32_t i = 1; i != 8; ++i)
       {
-        Ptr<WaveNetDevice> device = DynamicCast<WaveNetDevice> (m_devices.Get (i));
+        Ptr<MmWaveWaveNetDevice> device = DynamicCast<MmWaveWaveNetDevice> (m_devices.Get (i));
         device->SetReceiveCallback (MakeCallback (&ChannelAccessTestCase::Receive, this));
 
         // at 0s, receivers are assigned ContinuosAccess from CCH, SCH1 to SCH6
         static std::vector<uint32_t> WaveChannels = MmWaveWaveChannelManager::GetWaveChannels ();
         uint32_t channel = WaveChannels[i - 1];
         const SchInfo info = SchInfo (channel, false, EXTENDED_CONTINUOUS);
-        Simulator::Schedule (Seconds (0), &WaveNetDevice::StartSch, device, info);
+        Simulator::Schedule (Seconds (0), &MmWaveWaveNetDevice::StartSch, device, info);
       }
 
     // at 0s, the sender is assigned DefaultCchAccess, so only node-1 can receive packets.
@@ -914,7 +914,7 @@ ChannelAccessTestCase::DoRun ()
   // test AlternatingAccess in the sender side
   {
     m_devices = TestCaseHelper::CreatWaveDevice (1);
-    m_sender = DynamicCast<WaveNetDevice> (m_devices.Get (0));
+    m_sender = DynamicCast<MmWaveWaveNetDevice> (m_devices.Get (0));
 
     // there is no need for assigning CCH alternating  access.
     SchInfo info = SchInfo (CCH, false, EXTENDED_ALTERNATING);
@@ -941,7 +941,7 @@ ChannelAccessTestCase::DoRun ()
     Simulator::Schedule (Seconds (3), &ChannelAccessTestCase::TestAlternating, this, info, false);
 
     // then we release channel access at 0.5s
-    Simulator::Schedule (Seconds (4), &WaveNetDevice::StopSch, m_sender, SCH1);
+    Simulator::Schedule (Seconds (4), &MmWaveWaveNetDevice::StopSch, m_sender, SCH1);
 
     info = SchInfo (SCH2, false, EXTENDED_ALTERNATING);
     // succeed to assign access for other SCH is previous SCH access is released
@@ -955,19 +955,19 @@ ChannelAccessTestCase::DoRun ()
   // test AlternatingAccess again in the receiver side
   {
     m_devices = TestCaseHelper::CreatWaveDevice (8);
-    m_sender = DynamicCast<WaveNetDevice> (m_devices.Get (0));
+    m_sender = DynamicCast<MmWaveWaveNetDevice> (m_devices.Get (0));
     m_received = 0;
 
     for (uint32_t i = 1; i != 8; ++i)
       {
-        Ptr<WaveNetDevice> device = DynamicCast<WaveNetDevice> (m_devices.Get (i));
+        Ptr<MmWaveWaveNetDevice> device = DynamicCast<MmWaveWaveNetDevice> (m_devices.Get (i));
         device->SetReceiveCallback (MakeCallback (&ChannelAccessTestCase::Receive, this));
 
         // at 0s, receivers are assigned ContinuosAccess from CCH, SCH1 to SCH6
         static std::vector<uint32_t> WaveChannels = MmWaveWaveChannelManager::GetWaveChannels ();
         uint32_t channel = WaveChannels[i - 1];
         const SchInfo info = SchInfo (channel, false, EXTENDED_CONTINUOUS);
-        Simulator::Schedule (Seconds (0), &WaveNetDevice::StartSch, device, info);
+        Simulator::Schedule (Seconds (0), &MmWaveWaveNetDevice::StartSch, device, info);
       }
 
     // at 0s, the sender is assigned DefaultCchAccess, so only node-1 can receive packets.
@@ -982,7 +982,7 @@ ChannelAccessTestCase::DoRun ()
 
     // at 1s, the sender is assigned ContinuosAccess for SCH1, so only node-2 can receive packets.
     SchInfo info = SchInfo (SCH1, false, EXTENDED_ALTERNATING);
-    Simulator::Schedule (Seconds (1), &WaveNetDevice::StartSch, m_sender, info);
+    Simulator::Schedule (Seconds (1), &MmWaveWaveNetDevice::StartSch, m_sender, info);
     // node-1 (assigned CCH access) and node-2 (assigned SCH1 access) can receive packets
     // in different channel interval
     Simulator::Schedule (Seconds (1.1), &ChannelAccessTestCase::SendX, this, SCH1, 2);
@@ -1045,8 +1045,8 @@ private:
   bool Receive (Ptr<NetDevice> dev, Ptr<const Packet> pkt, uint16_t mode, const Address &sender);
 
   NetDeviceContainer m_devices; ///< devices
-  Ptr<WaveNetDevice>  m_sender; ///< sender
-  Ptr<WaveNetDevice>  m_receiver; ///< receiver
+  Ptr<MmWaveWaveNetDevice>  m_sender; ///< sender
+  Ptr<MmWaveWaveNetDevice>  m_receiver; ///< receiver
 };
 
 AnnexC_TestCase::AnnexC_TestCase (void)
@@ -1146,17 +1146,17 @@ void
 AnnexC_TestCase::DoRun (void)
 {
   m_devices = TestCaseHelper::CreatWaveDevice (2);
-  m_sender = DynamicCast<WaveNetDevice> (m_devices.Get (0));
-  m_receiver = DynamicCast<WaveNetDevice> (m_devices.Get (1));
+  m_sender = DynamicCast<MmWaveWaveNetDevice> (m_devices.Get (0));
+  m_receiver = DynamicCast<MmWaveWaveNetDevice> (m_devices.Get (1));
   m_receiver->SetReceiveCallback (MakeCallback (&AnnexC_TestCase::Receive, this));
 
   // at 0s, the receiver is assigned AlternatingAccess  for SCH1
   SchInfo infoReceiver = SchInfo (SCH1, false, EXTENDED_ALTERNATING);
-  Simulator::Schedule (MilliSeconds (0), &WaveNetDevice::StartSch, m_receiver, infoReceiver);
+  Simulator::Schedule (MilliSeconds (0), &MmWaveWaveNetDevice::StartSch, m_receiver, infoReceiver);
 
   // at 0s, the sender is assigned AlternatingAccess for SCH1
   SchInfo infoSender = SchInfo (SCH1, false, EXTENDED_ALTERNATING);
-  Simulator::Schedule (MilliSeconds (0), &WaveNetDevice::StartSch, m_sender, infoSender);
+  Simulator::Schedule (MilliSeconds (0), &MmWaveWaveNetDevice::StartSch, m_sender, infoSender);
 
   TxInfo txInfo = TxInfo (CCH, 0, WifiMode ("OfdmRate3MbpsBW10MHz"), WIFI_PREAMBLE_LONG, 0);
   // the packet size with 2312 bytes costs 6.42s, which will cancel this transmission in the CCH Interval

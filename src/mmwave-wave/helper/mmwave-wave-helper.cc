@@ -271,6 +271,10 @@ MmWaveWaveHelper::Default (void)
   MmWaveWaveHelper helper;
   // default 7 MAC entities and single PHY device.
   helper.CreateMacForChannel (MmWaveWaveChannelManager::GetWaveChannels ());
+  // Set central frequency in MHz
+  helper.SetFrequency(60e3);
+  // Set number of antennas per UE
+  helper.SetAntenna(64);
   helper.CreatePhys (1);
   helper.SetChannelScheduler ("ns3::MmWaveWaveDefaultChannelScheduler");
   helper.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
@@ -295,6 +299,18 @@ MmWaveWaveHelper::CreateMacForChannel (std::vector<uint32_t> channelNumbers)
         }
     }
   m_macsForChannelNumber = channelNumbers;
+}
+
+void
+MmWaveWaveHelper::SetAntenna (uint16_t NAntennas)
+{
+  m_noAntennas = NAntennas;
+}
+
+void
+MmWaveWaveHelper::SetFrequency (uint16_t freq)
+{
+  m_freq = freq;
 }
 
 void
@@ -384,7 +400,7 @@ MmWaveWaveHelper::Install (const WifiPhyHelper &phyHelper,  const WifiMacHelper 
       for (uint32_t j = 0; j != m_physNumber; ++j)
         {
           Ptr<WifiPhy> phy = phyHelper.Create (node, device);
-          phy->ConfigureStandard (WIFI_PHY_STANDARD_80211_10MHZ);
+          phy->ConfigureStandard (WIFI_PHY_MMWAVE_80211_60GHZ);
           phy->SetChannelNumber (MmWaveWaveChannelManager::GetCch ());
           device->AddPhy (phy);
         }

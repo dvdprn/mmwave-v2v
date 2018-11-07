@@ -55,6 +55,8 @@ enum WifiPhyStandard
   WIFI_PHY_STANDARD_80211ax_2_4GHZ,
   /** HE PHY for the 5 GHz band (clause 26) */
   WIFI_PHY_STANDARD_80211ax_5GHZ,
+  /** OFDM PHY for the 60 GHz band */
+  WIFI_PHY_MMWAVE_80211_60GHZ,
   /** Unspecified */
   WIFI_PHY_STANDARD_UNSPECIFIED
 };

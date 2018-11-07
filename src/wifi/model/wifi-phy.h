@@ -1564,6 +1564,12 @@ private:
    * supported rates for 802.11ax standard.
    */
   void Configure80211ax (void);
+
+  /**
+   * Configure WifiPhy with appropriate channel frequency and
+   * supported rates for MmWave communication.
+   */
+  void ConfigureMmWave80211_100Mhz (void);
   /**
    * Configure the device Mcs set with the appropriate HtMcs modes for
    * the number of available transmit spatial streams
