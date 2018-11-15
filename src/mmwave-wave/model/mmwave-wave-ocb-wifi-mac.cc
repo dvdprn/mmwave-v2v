@@ -371,7 +371,8 @@ MmWaveWaveOcbWifiMac::FinishConfigureStandard (enum WifiPhyStandard standard)
 {
   NS_LOG_FUNCTION (this << standard);
   NS_ASSERT ((standard == WIFI_PHY_STANDARD_80211_10MHZ)
-             || (standard == WIFI_PHY_STANDARD_80211a));
+             || (standard == WIFI_PHY_STANDARD_80211a)
+             || (standard == WIFI_PHY_MMWAVE_80211_60GHZ));
 
   uint32_t cwmin = 15;
   uint32_t cwmax = 1023;

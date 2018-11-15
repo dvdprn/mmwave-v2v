@@ -507,6 +507,7 @@ protected:
    * \param enable whether HE is supported
    */
   void SetHeSupported (bool enable);
+  
   /**
    * Return whether the device supports HE.
    *

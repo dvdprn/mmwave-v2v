@@ -413,7 +413,7 @@ MmWaveWaveHelper::Install (const WifiPhyHelper &phyHelper,  const WifiMacHelper 
           // we use MmWaveWaveMacLow to replace original MacLow
           ocbMac->EnableForWave (device);
           ocbMac->SetWifiRemoteStationManager ( m_stationManager.Create<WifiRemoteStationManager> ());
-          ocbMac->ConfigureStandard (WIFI_PHY_STANDARD_80211_10MHZ);
+          ocbMac->ConfigureStandard (WIFI_PHY_MMWAVE_80211_60GHZ);
           device->AddMac (*k, ocbMac);
         }
 

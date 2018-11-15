@@ -283,6 +283,9 @@ WifiMac::ConfigureStandard (WifiPhyStandard standard)
     case WIFI_PHY_STANDARD_80211ax_5GHZ:
       Configure80211ax_5Ghz ();
       break;
+    case WIFI_PHY_MMWAVE_80211_60GHZ:
+      Configure80211_ad ();
+      break;
     case WIFI_PHY_STANDARD_UNSPECIFIED:
     default:
       NS_FATAL_ERROR ("Wifi standard not found");
@@ -341,6 +344,20 @@ WifiMac::Configure80211_10Mhz (void)
   SetPifs (MicroSeconds (32 + 13));
   SetCtsTimeout (MicroSeconds (32 + 88 + 13 + GetDefaultMaxPropagationDelay ().GetMicroSeconds () * 2));
   SetAckTimeout (MicroSeconds (32 + 88 + 13 + GetDefaultMaxPropagationDelay ().GetMicroSeconds () * 2));
+}
+
+void
+WifiMac::Configure80211_ad (void)
+{
+  NS_LOG_FUNCTION (this);
+  SetRifs (MicroSeconds (1));
+  SetSifs (MicroSeconds (3));
+  SetSlot (MicroSeconds (5));
+  SetMaxPropagationDelay(NanoSeconds(100));
+  SetEifsNoDifs (GetSifs() + NanoSeconds(3062));
+  SetPifs (GetSifs() + GetSlot());
+  SetCtsTimeout (GetSifs() + NanoSeconds(3062) + GetSlot() + GetDefaultMaxPropagationDelay () * 2);
+  SetAckTimeout (GetSifs() + NanoSeconds(3062) + GetSlot() + GetDefaultMaxPropagationDelay () * 2);
 }
 
 void

@@ -453,6 +453,8 @@ private:
    */
   void Configure80211ax_5Ghz (void);
 
+  void Configure80211_ad (void);
+
   /**
    * The trace source fired when packets come into the "top" of the device
    * at the L3/L2 transition, before being queued for transmission.

@@ -896,6 +896,7 @@ WifiPhy::ConfigureMmWave80211_100Mhz (void)
 {
   NS_LOG_FUNCTION (this);
 
+  // This is not realistic, has to be changed
   m_deviceRateSet.push_back (WifiPhy::GetOfdmRate54Mbps ());
 }
 
