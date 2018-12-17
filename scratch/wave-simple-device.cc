@@ -98,13 +98,14 @@ MmWaveWaveNetDeviceExample::CreateWaveNodes (void)
   mobility.SetMobilityModel ("ns3::ConstantPositionMobilityModel");
   mobility.Install (nodes);
 
-  YansWifiChannelHelper waveChannel = YansWifiChannelHelper::Default ();
-  YansMmWaveWavePhyHelper wavePhy =  YansMmWaveWavePhyHelper::Default ();
-  wavePhy.SetChannel (waveChannel.Create ());
-  wavePhy.SetPcapDataLinkType (WifiPhyHelper::DLT_IEEE802_11);
-  QosMmWaveWaveMacHelper waveMac = QosMmWaveWaveMacHelper::Default ();
+  // YansWifiChannelHelper waveChannel = YansWifiChannelHelper::Default ();
+  // SpectrumMmWaveWavePhyHelper wavePhy =  SpectrumMmWaveWavePhyHelper::Default ();
+  // wavePhy.SetChannel (waveChannel.Create ());
+  // wavePhy.SetPcapDataLinkType (WifiPhyHelper::DLT_IEEE802_11);
+  // QosMmWaveWaveMacHelper waveMac = QosMmWaveWaveMacHelper::Default ();
   MmWaveWaveHelper waveHelper = MmWaveWaveHelper::Default ();
-  devices = waveHelper.Install (wavePhy, waveMac, nodes);
+  waveHelper.SetPropagationLossModel("ns3::MmWaveV2VPropagationLossModel");
+  devices = waveHelper.Install (nodes);
 
   for (uint32_t i = 0; i != devices.GetN (); ++i)
     {
@@ -114,7 +115,7 @@ MmWaveWaveNetDeviceExample::CreateWaveNodes (void)
     }
 
   // Tracing
-  wavePhy.EnablePcap ("wave-simple-device", devices);
+  // wavePhy.EnablePcap ("wave-simple-device", devices);
 }
 
 bool

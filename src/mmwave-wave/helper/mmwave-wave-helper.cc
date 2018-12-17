@@ -28,6 +28,7 @@
 #include "ns3/unused.h"
 #include "mmwave-wave-mac-helper.h"
 #include "mmwave-wave-helper.h"
+#include <ns3/multi-model-spectrum-channel.h>
 
 NS_LOG_COMPONENT_DEFINE ("MmWaveWaveHelper");
 
@@ -119,16 +120,16 @@ AsciiPhyReceiveSinkWithoutContext (
 
 
 /****************************** YansMmWaveWavePhyHelper ***********************************/
-YansMmWaveWavePhyHelper
-YansMmWaveWavePhyHelper::Default (void)
+SpectrumMmWaveWavePhyHelper
+SpectrumMmWaveWavePhyHelper::Default (void)
 {
-  YansMmWaveWavePhyHelper helper;
+  SpectrumMmWaveWavePhyHelper helper;
   helper.SetErrorRateModel ("ns3::NistErrorRateModel");
   return helper;
 }
 
 void
-YansMmWaveWavePhyHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename)
+SpectrumMmWaveWavePhyHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> nd, bool promiscuous, bool explicitFilename)
 {
   //
   // All of the Pcap enable functions vector through here including the ones
@@ -138,7 +139,7 @@ YansMmWaveWavePhyHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> 
   Ptr<MmWaveWaveNetDevice> device = nd->GetObject<MmWaveWaveNetDevice> ();
   if (device == 0)
     {
-      NS_LOG_INFO ("YansMmWaveWavePhyHelper::EnablePcapInternal(): Device " << &device << " not of type ns3::MmWaveWaveNetDevice");
+      NS_LOG_INFO ("SpectrumMmWaveWavePhyHelper::EnablePcapInternal(): Device " << &device << " not of type ns3::MmWaveWaveNetDevice");
       return;
     }
 
@@ -163,13 +164,13 @@ YansMmWaveWavePhyHelper::EnablePcapInternal (std::string prefix, Ptr<NetDevice> 
   for (i = phys.begin (); i != phys.end (); ++i)
     {
       Ptr<WifiPhy> phy = (*i);
-      phy->TraceConnectWithoutContext ("MonitorSnifferTx", MakeBoundCallback (&YansMmWaveWavePhyHelper::PcapSniffTxEvent, file));
-      phy->TraceConnectWithoutContext ("MonitorSnifferRx", MakeBoundCallback (&YansMmWaveWavePhyHelper::PcapSniffRxEvent, file));
+      phy->TraceConnectWithoutContext ("MonitorSnifferTx", MakeBoundCallback (&SpectrumMmWaveWavePhyHelper::PcapSniffTxEvent, file));
+      phy->TraceConnectWithoutContext ("MonitorSnifferRx", MakeBoundCallback (&SpectrumMmWaveWavePhyHelper::PcapSniffRxEvent, file));
     }
 }
 
 void
-YansMmWaveWavePhyHelper::EnableAsciiInternal (
+SpectrumMmWaveWavePhyHelper::EnableAsciiInternal (
   Ptr<OutputStreamWrapper> stream,
   std::string prefix,
   Ptr<NetDevice> nd,
@@ -274,13 +275,15 @@ MmWaveWaveHelper::Default (void)
   // Set central frequency in MHz
   helper.SetFrequency(60e3);
   // Set number of antennas per UE
-  helper.SetAntenna(64);
+  helper.SetAntenna(16);
   helper.CreatePhys (1);
   helper.SetChannelScheduler ("ns3::MmWaveWaveDefaultChannelScheduler");
+  helper.SetSpectrumChannel ("ns3::MultiModelSpectrumChannel");
   helper.SetRemoteStationManager ("ns3::ConstantRateWifiManager",
                                   "DataMode", StringValue ("OfdmRate6MbpsBW10MHz"),
                                   "ControlMode",StringValue ("OfdmRate6MbpsBW10MHz"),
                                   "NonUnicastMode", StringValue ("OfdmRate6MbpsBW10MHz"));
+
   return helper;
 }
 
@@ -373,18 +376,46 @@ MmWaveWaveHelper::SetChannelScheduler (std::string type,
   m_channelScheduler.Set (n7, v7);
 }
 
-NetDeviceContainer
-MmWaveWaveHelper::Install (const WifiPhyHelper &phyHelper,  const WifiMacHelper &macHelper, NodeContainer c) const
+void
+MmWaveWaveHelper::SetSpectrumChannel (std::string type)
 {
-  try
-    {
-      const QosMmWaveWaveMacHelper& qosMac = dynamic_cast<const QosMmWaveWaveMacHelper&> (macHelper);
-      NS_UNUSED (qosMac);
-    }
-  catch (const std::bad_cast &)
-    {
-      NS_FATAL_ERROR ("WifiMacHelper should be the class or subclass of QosMmWaveWaveMacHelper");
-    }
+  m_channelFactory = ObjectFactory ();
+  m_channelFactory.SetTypeId (type);
+}
+
+void
+MmWaveWaveHelper::SetPropagationLossModel (std::string type)
+{
+  NS_LOG_FUNCTION (this << type);
+  m_pathlossModelType = type;
+  m_pathlossModelFactory = ObjectFactory ();
+  m_pathlossModelFactory.SetTypeId (type);
+}
+
+NetDeviceContainer
+// MmWaveWaveHelper::Install (const WifiPhyHelper &phyHelper,  const WifiMacHelper &macHelper, NodeContainer c) const
+MmWaveWaveHelper::Install (NodeContainer c) const
+{
+  // try
+  //   {
+  //     const QosMmWaveWaveMacHelper& qosMac = dynamic_cast<const QosMmWaveWaveMacHelper&> (macHelper);
+  //     NS_UNUSED (qosMac);
+  //   }
+  // catch (const std::bad_cast &)
+  //   {
+  //     NS_FATAL_ERROR ("WifiMacHelper should be the class or subclass of QosMmWaveWaveMacHelper");
+  //   }
+
+  // YansWifiChannelHelper waveChannel = YansWifiChannelHelper::Default ();
+  SpectrumMmWaveWavePhyHelper phyHelper =  SpectrumMmWaveWavePhyHelper::Default ();
+  Ptr<SpectrumChannel> waveChannel = m_channelFactory.Create<SpectrumChannel> ();
+  Ptr<Object> pathlossModel = m_pathlossModelFactory.Create ();
+  Ptr<PropagationLossModel> splm = pathlossModel->GetObject<PropagationLossModel> ();
+  waveChannel->AddPropagationLossModel(splm);
+
+  phyHelper.SetChannel (waveChannel);
+  phyHelper.SetPcapDataLinkType (WifiPhyHelper::DLT_IEEE802_11);
+  QosMmWaveWaveMacHelper macHelper = QosMmWaveWaveMacHelper::Default ();
 
   NetDeviceContainer devices;
   for (NodeContainer::Iterator i = c.Begin (); i != c.End (); ++i)
@@ -426,16 +457,16 @@ MmWaveWaveHelper::Install (const WifiPhyHelper &phyHelper,  const WifiMacHelper 
 }
 
 NetDeviceContainer
-MmWaveWaveHelper::Install (const WifiPhyHelper &phy, const WifiMacHelper &mac, Ptr<Node> node) const
+MmWaveWaveHelper::Install (Ptr<Node> node) const
 {
-  return Install (phy, mac, NodeContainer (node));
+  return Install (NodeContainer (node));
 }
 
 NetDeviceContainer
-MmWaveWaveHelper::Install (const WifiPhyHelper &phy, const WifiMacHelper &mac, std::string nodeName) const
+MmWaveWaveHelper::Install (std::string nodeName) const
 {
   Ptr<Node> node = Names::Find<Node> (nodeName);
-  return Install (phy, mac, NodeContainer (node));
+  return Install (NodeContainer (node));
 }
 
 void

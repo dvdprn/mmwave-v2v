@@ -360,6 +360,7 @@ SpectrumWifiPhy::GetBandBandwidth (void) const
     case WIFI_PHY_STANDARD_80211n_2_4GHZ:
     case WIFI_PHY_STANDARD_80211n_5GHZ:
     case WIFI_PHY_STANDARD_80211ac:
+    case WIFI_PHY_MMWAVE_80211_60GHZ:
       // Use OFDM subcarrier width of 312.5 KHz as band granularity
       bandBandwidth = 312500;
       break;

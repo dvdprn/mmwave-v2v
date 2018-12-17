@@ -26,6 +26,7 @@
 #include "ns3/net-device-container.h"
 #include "ns3/trace-helper.h"
 #include "ns3/yans-wifi-helper.h"
+#include "ns3/spectrum-wifi-helper.h"
 #include <ns3/antenna-array-model.h>
 
 namespace ns3 {
@@ -38,13 +39,13 @@ class Node;
  * To trace MmWaveWaveNetDevice, we have to overwrite the trace functions of class YansWifiPhyHelper.
  * The source code is very similar with YansWifiPhy, only with some adaptation.
  */
-class YansMmWaveWavePhyHelper : public YansWifiPhyHelper
+class SpectrumMmWaveWavePhyHelper : public SpectrumWifiPhyHelper
 {
 public:
   /**
    * Create a phy helper in a default working state.
    */
-  static YansMmWaveWavePhyHelper Default (void);
+  static SpectrumMmWaveWavePhyHelper Default (void);
 
 private:
   /**
@@ -209,30 +210,30 @@ public:
                             std::string n6 = "", const AttributeValue &v6 = EmptyAttributeValue (),
                             std::string n7 = "", const AttributeValue &v7 = EmptyAttributeValue ());
 
+  void SetSpectrumChannel (std::string type);
+  void SetPropagationLossModel (std::string type);
+
   /**
    * \param phy the PHY helper to create PHY objects
    * \param mac the MAC helper to create MAC objects
    * \param c the set of nodes on which a wifi device must be created
    * \returns a device container which contains all the devices created by this method.
    */
-  virtual NetDeviceContainer Install (const WifiPhyHelper &phy,
-                                      const WifiMacHelper &mac, NodeContainer c) const;
+  virtual NetDeviceContainer Install (NodeContainer c) const;
   /**
    * \param phy the PHY helper to create PHY objects
    * \param mac the MAC helper to create MAC objects
    * \param node the node on which a wifi device must be created
    * \returns a device container which contains all the devices created by this method.
    */
-  virtual NetDeviceContainer Install (const WifiPhyHelper &phy,
-                                      const WifiMacHelper &mac,   Ptr<Node> node) const;
+  virtual NetDeviceContainer Install (Ptr<Node> node) const;
   /**
    * \param phy the PHY helper to create PHY objects
    * \param mac the MAC helper to create MAC objects
    * \param nodeName the name of node on which a wifi device must be created
    * \returns a device container which contains all the devices created by this method.
    */
-  virtual NetDeviceContainer Install (const WifiPhyHelper &phy,
-                                      const WifiMacHelper &mac, std::string nodeName) const;
+  virtual NetDeviceContainer Install (std::string nodeName) const;
 
   /**
    * Helper to enable all MmWaveWaveNetDevice log components with one statement
@@ -266,6 +267,10 @@ private:
   uint16_t m_noEnbPanels;
   uint16_t m_noUePanels;
   uint16_t m_freq;
+
+  std::string m_pathlossModelType;
+  ObjectFactory m_pathlossModelFactory;
+  ObjectFactory m_channelFactory;
 };
 }
 #endif /* WAVE_HELPER_H */

@@ -563,7 +563,7 @@ MmWave3gppChannel::DoCalcRxPowerSpectralDensity (Ptr<const SpectrumValue> txPsd,
   //When there is a LOS/NLOS switch, a new uncorrelated channel is created.
   //Therefore, LOS/NLOS condition of updating is always consistent with the previous channel.
 
-  //I only update the fowrad channel.
+  //I only update the forward channel.
   if ((it == m_channelMap.end () && itReverse == m_channelMap.end ())
       || (it != m_channelMap.end () && it->second->m_channel.size () == 0)
       || (it != m_channelMap.end () && it->second->m_los != los))

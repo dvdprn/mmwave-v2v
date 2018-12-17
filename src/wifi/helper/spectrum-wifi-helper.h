@@ -62,7 +62,6 @@ public:
    */
   void SetChannel (std::string channelName);
 
-private:
   /**
    * \param node the node on which we wish to create a wifi PHY
    * \param device the device within which this PHY will be created
@@ -71,6 +70,8 @@ private:
    * This method implements the pure virtual method defined in \ref ns3::WifiPhyHelper.
    */
   virtual Ptr<WifiPhy> Create (Ptr<Node> node, Ptr<NetDevice> device) const;
+
+private:
 
   Ptr<SpectrumChannel> m_channel; ///< the channel
 };
